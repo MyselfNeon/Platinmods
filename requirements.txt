@@ -1,0 +1,6 @@
+pyrogram
+tgcrypto
+httpx
+beautifulsoup4
+flask
+python-dotenv

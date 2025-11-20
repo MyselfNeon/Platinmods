@@ -1,0 +1,13 @@
+Python
+​pycache/
+*.pyc
+​Environment Variables (Sensitive!)
+​.env
+​Pyrogram Session Files (Sensitive!)
+​*.session
+*.session-journal
+​State files
+​platinmods_state.json
+user_online.txt
+​OS
+​.DS_Store
