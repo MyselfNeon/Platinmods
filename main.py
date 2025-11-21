@@ -30,7 +30,14 @@ bot = Client(
 # --- Scheduler ---
 
 async def scheduler():
-    """Main loop."""
+    """Main loop. Waits for the Pyrogram client to be running before executing."""
+    
+    # *** FIX: Wait until the bot client is fully started before running checks ***
+    while not bot.is_running:
+        logger.info("Scheduler waiting for Telegram client to start...")
+        await asyncio.sleep(5) 
+    # ***************************************************************************
+
     async with httpx.AsyncClient(timeout=20.0) as http_client:
         while True:
             logger.info("Checking targets...")
