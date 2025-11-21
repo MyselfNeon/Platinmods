@@ -16,7 +16,7 @@ BOT_TOKEN = os.getenv("BOT_TOKEN", "")
 NOTIFICATION_CHAT_ID = int(os.getenv("NOTIFICATION_CHAT_ID", 0))
 
 # Check interval in seconds (Default: 5 minutes)
-CHECK_INTERVAL = int(os.getenv("CHECK_INTERVAL", 120))
+CHECK_INTERVAL = int(os.getenv("CHECK_INTERVAL", 30))
 
 # Server Port (Required for cloud deployments)
 PORT = int(os.getenv("PORT", 8080))
