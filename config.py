@@ -19,6 +19,11 @@ AUTH_USERS_STRING = os.getenv("AUTH_USERS", "")
 # Convert the string of IDs into a set of integers for efficient lookup
 AUTH_USERS = {int(x.strip()) for x in AUTH_USERS_STRING.split(',') if x.strip().isdigit()}
 
+# Combined set of all authorized users and the owner for admin commands
+ADMINS = AUTH_USERS.copy()
+if OWNER_ID != 0:
+    ADMINS.add(OWNER_ID)
+
 # --- Database Config (MongoDB) ---
 # Your Mongodb Database Url
 DB_URI = os.getenv("DB_URI", "")
