@@ -9,10 +9,7 @@ from app import start_web_server
 # Import tracking logic from the new module
 from MyselfNeon.track import check_user_status, check_forums
 
-# ---------------------------------------------------------
-# HARDCODE YOUR KEEP ALIVE URL HERE
-# Example: "https://your-app-name.onrender.com/health"
-# ---------------------------------------------------------
+# YOUR KEEP ALIVE URL HERE
 KEEP_ALIVE_URL = "https://platinmods.onrender.com/" 
 
 # Configure Logging
@@ -32,7 +29,6 @@ bot = Client(
 )
 
 # --- Scheduler ---
-
 async def scheduler():
     """Main loop. Waits for the Pyrogram client to be running before executing."""
     global BOT_READY_MESSAGE_SENT
@@ -45,7 +41,7 @@ async def scheduler():
     # *** Send ready message once per process startup/restart ***
     if not BOT_READY_MESSAGE_SENT:
         try:
-            msg = "✅ **Bot Online & Monitoring:**\n\nI have successfully reconnected to Telegram. The monitoring schedule has been initialized (This happens after every server restart/wake-up)."
+            msg = "✅ **__Bot Online & Monitoring:**\n\nI have Successfully Reconnected to Telegram. The monitoring schedule has been initialized (This happens after every server Restart/wake-up).__"
             await bot.send_message(NOTIFICATION_CHAT_ID, msg)
             logger.info("Sent 'Bot Ready' message after restart.")
             BOT_READY_MESSAGE_SENT = True
@@ -53,7 +49,6 @@ async def scheduler():
             logger.error(f"Failed to send ready message: {e}")
             
     # *********************************************
-
     async with httpx.AsyncClient(timeout=20.0) as http_client:
         while True:
             logger.info("Checking targets...")
@@ -64,7 +59,6 @@ async def scheduler():
             await asyncio.sleep(CHECK_INTERVAL)
 
 # --- Keep-Alive Function ---
-
 async def keep_alive():
     """Send a request every 300 seconds to keep the bot alive (if required)."""
     if not KEEP_ALIVE_URL:
@@ -84,24 +78,23 @@ async def keep_alive():
             await asyncio.sleep(300)
 
 # --- Bot Commands ---
-
 @bot.on_message(filters.command("start"))
 async def start_cmd(client, message):
     chat_type = message.chat.type.name.lower()
     
     if chat_type == 'private':
         reply_text = (
-            f"👋 **Bot is Online!**\n\n"
-            f"Your **PRIVATE** Chat ID is: `{message.chat.id}`\n\n"
-            f"**Action Required:** Set this **positive** ID as your `NOTIFICATION_CHAT_ID` "
-            f"in your configuration to receive private alerts."
+            f"👋 **__Bot is Online!__**\n\n"
+            f"__**Your PRIVATE Chat ID is:__** `{message.chat.id}`\n\n"
+            f"**__Action Required:** Set this **positive** ID as your NOTIFICATION_CHAT_ID __"
+            f"__in your configuration to receive private alerts.__"
         )
     else:
          reply_text = (
-            f"👋 **Bot is Online!**\n\n"
-            f"The Chat ID for this **{chat_type.upper()}** is: `{message.chat.id}`\n\n"
-            f"**NOTE:** If you want **private notifications**, use `/start` in a direct message "
-            f"to the bot and use that **positive** ID instead."
+            f"👋 **__Bot is Online!__**\n\n"
+            f"**__The Chat ID for this {chat_type.upper()} is:__** `{message.chat.id}`\n\n"
+            f"**__NOTE:** If you want private notifications, use `/start` in a direct message __"
+            f"__to the bot and use that **positive** ID instead.__"
         )
     
     await message.reply(reply_text)
@@ -109,7 +102,7 @@ async def start_cmd(client, message):
 @bot.on_message(filters.command("check"))
 async def force_check(client, message):
     # This reply runs immediately, preventing the hang
-    await message.reply("🔄 **Force check initiated...** Please wait for the summary report.")
+    await message.reply("🔄 **__Force Check Initiated...** \nPlease wait for the summary report.__")
 
     async def run_check_and_confirm(chat_id):
         """Runs the scraping task and sends a detailed summary report."""
@@ -144,8 +137,7 @@ async def force_check(client, message):
             logger.error(f"Error during force check: {e}")
             await client.send_message(chat_id, f"❌ **Check failed.** An internal error occurred.")
 
-
-    # Create a new, independent task to run the scraping in the background
+# Create a new, independent task to run the scraping in the background
     asyncio.create_task(run_check_and_confirm(message.chat.id))
 
 # --- Entry Point ---
