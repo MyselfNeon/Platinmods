@@ -101,8 +101,13 @@ async def start_cmd(client, message):
 
 @bot.on_message(filters.command("check"))
 async def force_check(client, message):
-    # This reply runs immediately, preventing the hang
-    await message.reply("🔄 **__Manual Check Initiated...** \n**Please wait for the summary report.__**")
+    # Send the temporary message
+    tmp = await message.reply(
+        "🔄 **__Manual Check Initiated...__**\n**Please wait for the summary Report.__**"
+    )
+    # Wait 3 seconds, then delete it
+    await asyncio.sleep(3)
+    await tmp.delete()
 
     async def run_check_and_confirm(chat_id):
         """Runs the scraping task and sends a detailed summary report."""
