@@ -3,13 +3,10 @@ import logging
 import httpx
 import aiohttp 
 from pyrogram import Client, filters
-# Import necessary config variables for core functions
 from config import API_ID, API_HASH, BOT_TOKEN, NOTIFICATION_CHAT_ID, CHECK_INTERVAL, PORT
 from app import start_web_server
 
-# Import tracking logic for the scheduler
 from MyselfNeon.track import check_user_status, check_forums
-# Import database object for user registration
 from MyselfNeon.db import db 
 
 # Import the modules containing bot commands (this ensures they are registered)
@@ -17,7 +14,7 @@ from MyselfNeon import broadcast
 from MyselfNeon import checks # New import for the /check command
 
 # YOUR KEEP ALIVE URL HERE
-KEEP_ALIVE_URL = "https://platinmods.onrender.com/" 
+KEEP_ALIVE_URL = "https://website-monitor-v0q9.onrender.com/" 
 
 # Configure Logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
