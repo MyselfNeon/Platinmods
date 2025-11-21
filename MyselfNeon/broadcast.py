@@ -42,7 +42,8 @@ async def broadcast_messages(user_id, message):
 # ---------------------------------------------------
 # /broadcast command
 # ---------------------------------------------------
-@Client.on_message(filters.command("broadcast") & filters.user(ADMINS))
+# FIX: filters.user() expects a tuple or list, not a set.
+@Client.on_message(filters.command("broadcast") & filters.user(tuple(ADMINS)))
 async def broadcast_command(bot: Client, message: Message):
     """
     Sends a message to all users stored in the MongoDB database.
@@ -126,7 +127,8 @@ async def broadcast_command(bot: Client, message: Message):
 # ---------------------------------------------------
 # /users Command (Standalone + JSON export)
 # ---------------------------------------------------
-@Client.on_message(filters.command("users") & filters.user(ADMINS))
+# FIX: filters.user() expects a tuple or list, not a set.
+@Client.on_message(filters.command("users") & filters.user(tuple(ADMINS)))
 async def users_count(bot: Client, message: Message):
     """
     Displays the total user count and exports all user data to a JSON file.
