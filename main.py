@@ -19,6 +19,10 @@ KEEP_ALIVE_URL = "https://platinmods.onrender.com/"
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
+# Global flag to track if the initial ready message has been sent
+# This flag is reset to False every time the Python process restarts (e.g., after server sleep/wake).
+BOT_READY_MESSAGE_SENT = False
+
 # Initialize Pyrogram Client
 bot = Client(
     "platinmods_bot",
@@ -31,12 +35,24 @@ bot = Client(
 
 async def scheduler():
     """Main loop. Waits for the Pyrogram client to be running before executing."""
+    global BOT_READY_MESSAGE_SENT
     
-    # *** FIX: Wait until the bot client is fully started before running checks ***
+    # Wait until the bot client is fully started (ready to send messages)
     while not bot.is_running:
         logger.info("Scheduler waiting for Telegram client to start...")
         await asyncio.sleep(5) 
-    # ***************************************************************************
+
+    # *** Send ready message once per process startup/restart ***
+    if not BOT_READY_MESSAGE_SENT:
+        try:
+            msg = "✅ **Bot Online & Monitoring:**\n\nI have successfully reconnected to Telegram. The monitoring schedule has been initialized (This happens after every server restart/wake-up)."
+            await bot.send_message(NOTIFICATION_CHAT_ID, msg)
+            logger.info("Sent 'Bot Ready' message after restart.")
+            BOT_READY_MESSAGE_SENT = True
+        except Exception as e:
+            logger.error(f"Failed to send ready message: {e}")
+            
+    # *********************************************
 
     async with httpx.AsyncClient(timeout=20.0) as http_client:
         while True:
