@@ -2,18 +2,24 @@ import asyncio
 import json
 import os
 import logging
+import random
 from bs4 import BeautifulSoup
+from fake_useragent import UserAgent  # pip install fake-useragent
 from config import USER_TARGETS, FORUM_TARGETS, NOTIFICATION_CHAT_ID
 
 # Configure Logger for this module
 logger = logging.getLogger(__name__)
 
 STATE_FILE = 'platinmods_state.json'
+COOKIE_FILE = 'cookies.json'
+
+# Initialize UserAgent rotator
+ua = UserAgent()
 
 # --- Helper Functions (ASYNCHRONOUS File I/O) ---
 
 def _load_state_sync():
-    """Synchronous function to load state (to be run in a thread)."""
+    """Synchronous function to load state."""
     if os.path.exists(STATE_FILE):
         try:
             with open(STATE_FILE, 'r') as f:
@@ -23,40 +29,114 @@ def _load_state_sync():
     return {}
 
 def _save_state_sync(state):
-    """Synchronous function to save state (to be run in a thread)."""
+    """Synchronous function to save state."""
     with open(STATE_FILE, 'w') as f:
         json.dump(state, f)
 
 async def load_state():
-    """Asynchronously loads the state."""
     return await asyncio.to_thread(_load_state_sync)
 
 async def save_state(state):
-    """Asynchronously saves the state."""
     await asyncio.to_thread(_save_state_sync, state)
 
-async def get_soup(url, client):
-    """Fetches a URL and returns a BeautifulSoup object."""
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
-    }
-    try:
-        response = await client.get(url, headers=headers, follow_redirects=True)
-        response.raise_for_status()
-        
-        # Move CPU-bound parsing work to a separate thread
-        soup = await asyncio.to_thread(BeautifulSoup, response.content, 'html.parser')
-        return soup
-    except Exception as e:
-        logger.error(f"Failed to fetch {url}: {e}")
-        return None
+# --- New Helper: Cookie Management ---
 
-# --- Tracking Logic ---
+def _load_cookies_sync():
+    if os.path.exists(COOKIE_FILE):
+        try:
+            with open(COOKIE_FILE, 'r') as f:
+                return json.load(f)
+        except Exception:
+            return {}
+    return {}
+
+def _save_cookies_sync(cookies_dict):
+    with open(COOKIE_FILE, 'w') as f:
+        json.dump(cookies_dict, f)
+
+async def load_cookies():
+    return await asyncio.to_thread(_load_cookies_sync)
+
+async def save_cookies(client):
+    # Extract cookies from httpx client and save them
+    cookies_dict = {key: value for key, value in client.cookies.items()}
+    await asyncio.to_thread(_save_cookies_sync, cookies_dict)
+
+# --- New Helper: Anti-Detection Headers ---
+
+def get_random_headers():
+    """Generates high-quality browser headers to avoid detection."""
+    random_ua = ua.random
+    return {
+        "User-Agent": random_ua,
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+        "Accept-Language": "en-US,en;q=0.9",
+        "Accept-Encoding": "gzip, deflate, br",
+        "Referer": "https://platinmods.com/",
+        "Connection": "keep-alive",
+        "Upgrade-Insecure-Requests": "1",
+        "Sec-Fetch-Dest": "document",
+        "Sec-Fetch-Mode": "navigate",
+        "Sec-Fetch-Site": "same-origin",
+        "Sec-Fetch-User": "?1",
+        "DNT": "1",  # Do Not Track
+    }
+
+# --- Modified Core Function ---
+
+async def get_soup(url, client):
+    """
+    Fetches a URL with retries, header rotation, and cookie management.
+    """
+    max_retries = 3
+    
+    # Load previous session cookies to look like a returning user
+    saved_cookies = await load_cookies()
+    if saved_cookies:
+        client.cookies.update(saved_cookies)
+
+    for attempt in range(max_retries):
+        headers = get_random_headers()
+        
+        try:
+            # Add a small random delay before request (Humanizing)
+            await asyncio.sleep(random.uniform(1, 3))
+            
+            response = await client.get(url, headers=headers, follow_redirects=True)
+            
+            # Handle Bot Detection Codes
+            if response.status_code in [403, 429, 503]:
+                logger.warning(f"Detected/Blocked ({response.status_code}) on {url}. Retrying {attempt + 1}/{max_retries}...")
+                
+                # If blocked, clear cookies to force a new identity on next try
+                client.cookies.clear()
+                
+                # Exponential backoff with jitter (wait 5s, 10s, etc.)
+                wait_time = (5 * (attempt + 1)) + random.uniform(0, 5)
+                await asyncio.sleep(wait_time)
+                continue
+            
+            response.raise_for_status()
+            
+            # Success: Save the valid cookies for next time
+            await save_cookies(client)
+            
+            # Move CPU-bound parsing work to a separate thread
+            soup = await asyncio.to_thread(BeautifulSoup, response.content, 'html.parser')
+            return soup
+
+        except Exception as e:
+            logger.error(f"Attempt {attempt + 1} failed for {url}: {e}")
+            await asyncio.sleep(random.uniform(2, 5))
+    
+    logger.error(f"Fatal: Could not fetch {url} after {max_retries} attempts.")
+    return None
+
+# --- Tracking Logic (Unchanged Logic, just using new get_soup) ---
 
 async def check_user_status(http_client, bot):
     """
     Checks user online status and sends alerts (online/offline).
-    Returns the user's current status (True/False).
     """
     user_status = {}
     for target in USER_TARGETS:
@@ -78,7 +158,6 @@ async def check_user_status(http_client, bot):
         was_online = current_state.get(state_key, False)
 
         if is_online and not was_online:
-            # User just came online
             msg = f"🚨 **USER ALERT**\n\n👤 **{target['name']}** is now **ONLINE**! 🟢\n🔗 [Profile Link]({target['url']})"
             try:
                 await bot.send_message(NOTIFICATION_CHAT_ID, msg, disable_web_page_preview=True)
@@ -88,7 +167,6 @@ async def check_user_status(http_client, bot):
                 logger.error(f"Telegram Error: {e}")
         
         elif not is_online and was_online:
-            # User just went offline
             msg = f"💤 **STATUS UPDATE**\n\n👤 **{target['name']}** is now **OFFLINE** 🔴"
             try:
                 await bot.send_message(NOTIFICATION_CHAT_ID, msg, disable_web_page_preview=True)
@@ -104,7 +182,6 @@ async def check_user_status(http_client, bot):
 async def check_forums(http_client, bot):
     """
     Checks for new threads in forums.
-    Returns a dictionary of forum names and their current thread counts.
     """
     state = await load_state()
     forum_counts = {}
@@ -115,7 +192,6 @@ async def check_forums(http_client, bot):
             forum_counts[forum_name] = "Error"
             continue
 
-        # XenForo 2 generic selector for thread titles
         thread_links = soup.select('.structItem-title a')
         
         current_threads = []
@@ -135,7 +211,6 @@ async def check_forums(http_client, bot):
         new_urls = curr_urls - prev_urls
         removed_urls = prev_urls - curr_urls
 
-        # Process New Threads
         if new_urls:
             for item in current_threads:
                 if item['url'] in new_urls:
@@ -145,7 +220,6 @@ async def check_forums(http_client, bot):
                     except Exception as e:
                         logger.error(f"Telegram Error: {e}")
 
-        # Process Removed Threads
         if removed_urls:
             for item in previous_threads:
                 if item['url'] in removed_urls:
@@ -155,7 +229,6 @@ async def check_forums(http_client, bot):
                     except Exception as e:
                         logger.error(f"Telegram Error: {e}")
 
-        # Save new state
         state[forum_name] = current_threads
         await save_state(state)
 
