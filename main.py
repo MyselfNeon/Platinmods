@@ -11,7 +11,7 @@ from app import start_web_server
 from MyselfNeon.track import check_user_status, check_forums
 
 # YOUR KEEP ALIVE URL HERE
-KEEP_ALIVE_URL = "https://platinmods.onrender.com/" 
+KEEP_ALIVE_URL = "https://website-monitor-v0q9.onrender.com/" 
 
 # Configure Logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
