@@ -86,15 +86,15 @@ async def start_cmd(client, message):
         reply_text = (
             f"👋 **__Bot is Online!__**\n\n"
             f"__**Your PRIVATE Chat ID is:__** `{message.chat.id}`\n\n"
-            f"**__Action Required:** Set this **positive** ID as your NOTIFICATION_CHAT_ID __"
-            f"__in your configuration to receive private alerts.__"
+            f"**__Action Required: Set this positive ID __**"
+            f"**__in your configuration to receive alerts.__**"
         )
     else:
          reply_text = (
             f"👋 **__Bot is Online!__**\n\n"
             f"**__The Chat ID for this {chat_type.upper()} is:__** `{message.chat.id}`\n\n"
-            f"**__NOTE:** If you want private notifications, use `/start` in a direct message __"
-            f"__to the bot and use that **positive** ID instead.__"
+            f"**__NOTE: If you want private notifications, use `/start` in a direct message __**"
+            f"**__to theComplane use that positive ID instead.__**"
         )
     
     await message.reply(reply_text)
@@ -102,7 +102,7 @@ async def start_cmd(client, message):
 @bot.on_message(filters.command("check"))
 async def force_check(client, message):
     # This reply runs immediately, preventing the hang
-    await message.reply("🔄 **__Force Check Initiated...** \nPlease wait for the summary report.__")
+    await message.reply("🔄 **__Force Check Initiated...** \n**Please wait for the summary report.__**")
 
     async def run_check_and_confirm(chat_id):
         """Runs the scraping task and sends a detailed summary report."""
@@ -113,20 +113,20 @@ async def force_check(client, message):
                 forum_counts = await check_forums(http_client, client)
 
             # --- Compile Summary Report ---
-            summary_parts = ["✅ **MANUAL CHECK COMPLETE**\n\n"]
+            summary_parts = ["✅ **__Manual Check Completed__**\n\n"]
             
             # 1. User Status Summary
-            summary_parts.append("👤 **User Status**")
+            summary_parts.append("👤 **__User Status__**")
             for name, status in user_status.items():
                 emoji = "🟢" if status == "Online" else "🔴" if status == "Offline" else "❓"
-                summary_parts.append(f"• {name}: **{status}** {emoji}")
+                summary_parts.append(f"__• {name}: **{status}** {emoji}__")
             
-            summary_parts.append("\n📚 **Forum Thread Counts**")
+            summary_parts.append("\n📚 **__Forum Thread Counts__**")
             
             # 2. Forum Counts Summary
             for forum, count in forum_counts.items():
                 count_str = str(count) if isinstance(count, int) else "Error"
-                summary_parts.append(f"• {forum}: **{count_str}** threads")
+                summary_parts.append(f"__• {forum}: **{count_str} threads__**")
 
             final_message = "\n".join(summary_parts)
             
@@ -135,13 +135,12 @@ async def force_check(client, message):
 
         except Exception as e:
             logger.error(f"Error during force check: {e}")
-            await client.send_message(chat_id, f"❌ **Check failed.** An internal error occurred.")
+            await client.send_message(chat_id, f"❌ **__Check failed.**\nAn internal error occurred.__")
 
 # Create a new, independent task to run the scraping in the background
     asyncio.create_task(run_check_and_confirm(message.chat.id))
 
 # --- Entry Point ---
-
 if __name__ == "__main__":
     # 1. Start the Fake Web Server (for cloud binding)
     logger.info(f"Starting Web Server on port {PORT}")
