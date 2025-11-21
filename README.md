@@ -1,30 +1,30 @@
 ## *Platinmods Monitor Bot*
 
-*A fully automated monitoring bot for **Platinmods.com**, built using Pyrogram, httpx, aiohttp, Flask, and asynchronous scraping with BeautifulSoup.*
+***A fully automated monitoring bot for Platinmods.com built using Pyrogram, httpx, aiohttp, Flask, and asynchronous scraping with BeautifulSoup.***
 
 ---
 
 ## ✨ *Features*
 
-- *User online/offline tracking*  
-- *New forum thread detection*  
-- *Removed thread detection*  
-- *Manual `/check` command with summary*  
-- Background scheduler  
-- *Keep-alive support for Render/Railway*  
-- *Thread‑safe persistent state tracking*
+- ***User Online/Offline tracking***  
+- ***New forum thread detection***  
+- ***Removed thread detection***  
+- ***Manual `/check` command with summary***  
+- ***Background scheduler***  
+- ***Keep-alive support for Render/Railway***  
+- ***Thread‑safe persistent state tracking***
 
 ---
 
 ## 🧩 *How It Works*
 
 ***The bot continuously:***
-*1. Fetches Platinmods URLs using async HTTP clients  
+***1. Fetches Platinmods URLs using async HTTP clients  
 2. Parses pages with BeautifulSoup  
 3. Detects user status changes and new/removed threads  
 4. Sends Telegram alerts  
 5. Stores state in `platinmods_state.json`  
-6. Runs forever using a scheduler + keep-alive pings*  
+6. Runs forever using a scheduler + keep-alive pings***  
 
 ---
 
