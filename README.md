@@ -18,7 +18,7 @@
 
 ## 🧩 *How It Works*
 
-*The bot continuously:*
+***The bot continuously:***
 *1. Fetches Platinmods URLs using async HTTP clients  
 2. Parses pages with BeautifulSoup  
 3. Detects user status changes and new/removed threads  
@@ -69,11 +69,8 @@ python main.py
 
 ## 🧪 *Commands*
 
-### `/start`
-*Shows your Chat ID*.
-
-### `/check`
-*Runs forced manual check + summary.*
+**- `/start` *Shows your Chat ID***.  
+**- `/check` *manual check + summary.***
 
 ---
 
@@ -81,24 +78,10 @@ python main.py
 
 ### *Render / Railway / Replit*
 
-*1. Set `KEEP_ALIVE_URL`  
+***1. Set `KEEP_ALIVE_URL`  
 2. Add environment variables  
 3. Deploy  
-4. Bot stays awake using keep-alive task*  
-
----
-
-## 📁 *Project Structure*
-
-```
-Platinmods/
-├── main.py
-├── track.py
-├── app.py
-├── config.py
-├── requirements.txt
-└── platinmods_state.json
-```
+4. Bot stays awake using keep-alive task***  
 
 ---
 
