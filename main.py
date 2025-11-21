@@ -41,7 +41,7 @@ async def scheduler():
     # *** Send ready message once per process startup/restart ***
     if not BOT_READY_MESSAGE_SENT:
         try:
-            msg = "✅ **__Bot Online & Monitoring:**\n\nI have Successfully Reconnected to Telegram. The monitoring schedule has been initialized (This happens after every server Restart/wake-up).__"
+            msg = "✅ **__Bot Online & Monitoring:\n\nI have Successfully Reconnected to Telegram. The monitoring schedule has been initialized (Happens after every server Restart).__**"
             await bot.send_message(NOTIFICATION_CHAT_ID, msg)
             logger.info("Sent 'Bot Ready' message after restart.")
             BOT_READY_MESSAGE_SENT = True
@@ -103,10 +103,10 @@ async def start_cmd(client, message):
 async def force_check(client, message):
     # Send the temporary message
     tmp = await message.reply(
-        "🔄 **__Manual Check Initiated...__**\n**Please wait for the summary Report.__**"
+        "🔄 **__Manual Check Initiated...__**\n**__Please wait for the summary Report.__**"
     )
-    # Wait 3 seconds, then delete it
-    await asyncio.sleep(3)
+    # Wait 2 seconds, then delete it
+    await asyncio.sleep(2)
     await tmp.delete()
 
     async def run_check_and_confirm(chat_id):
