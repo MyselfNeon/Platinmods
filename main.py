@@ -67,8 +67,8 @@ async def scheduler():
 
 async def keep_alive():
     """Send a request every 300 seconds to keep the bot alive (if required)."""
-    if not KEEP_ALIVE_URL or KEEP_ALIVE_URL == "https://platinmods.onrender.com/":
-        logging.warning("KEEP_ALIVE_URL is not configured properly — skipping keep-alive task.")
+    if not KEEP_ALIVE_URL:
+        logging.warning("KEEP_ALIVE_URL is not configured — skipping keep-alive task.")
         return
 
     async with aiohttp.ClientSession() as session:
@@ -162,11 +162,11 @@ if __name__ == "__main__":
     # Create Background Tasks
     loop.create_task(scheduler())
     
-    # Create Keep Alive Task
-    if KEEP_ALIVE_URL and KEEP_ALIVE_URL != "YOUR_KEEP_ALIVE_URL_HERE":
+    # Create Keep Alive Task (updated as requested)
+    if KEEP_ALIVE_URL:
         loop.create_task(keep_alive())
         logging.info("🌐 Keep-alive task started.")
     else:
-        logging.warning("⚠️ Keep-alive task skipped: URL not set or is default placeholder.")
+        logging.warning("⚠️ Keep-alive task skipped: URL not set.")
         
     bot.run()
