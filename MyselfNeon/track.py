@@ -1,37 +1,16 @@
 import asyncio
-import json
-import os
 import logging
 from bs4 import BeautifulSoup
 from config import USER_TARGETS, FORUM_TARGETS, NOTIFICATION_CHAT_ID
 
+# Import the new database module (Corrected path)
+from MyselfNeon.db import db
+
 # Configure Logger for this module
 logger = logging.getLogger(__name__)
-STATE_FILE = 'platinmods_state.json'
 
-# --- Helper Functions (ASYNCHRONOUS File I/O) ---
-def _load_state_sync():
-    """Synchronous function to load state (to be run in a thread)."""
-    if os.path.exists(STATE_FILE):
-        try:
-            with open(STATE_FILE, 'r') as f:
-                return json.load(f)
-        except Exception:
-            return {}
-    return {}
-
-def _save_state_sync(state):
-    """Synchronous function to save state (to be run in a thread)."""
-    with open(STATE_FILE, 'w') as f:
-        json.dump(state, f)
-
-async def load_state():
-    """Asynchronously loads the state."""
-    return await asyncio.to_thread(_load_state_sync)
-
-async def save_state(state):
-    """Asynchronously saves the state."""
-    await asyncio.to_thread(_save_state_sync, state)
+# --- Helper Functions ---
+# NOTE: File-based state functions are removed as state is now in MongoDB.
 
 async def get_soup(url, client):
     """Fetches a URL and returns a BeautifulSoup object."""
@@ -53,7 +32,7 @@ async def get_soup(url, client):
 async def check_user_status(http_client, bot):
     """
     Checks user online status and sends alerts (online/offline).
-    Returns the user's current status (True/False).
+    Uses MongoDB to store the last known status.
     """
     user_status = {}
     for target in USER_TARGETS:
@@ -70,17 +49,23 @@ async def check_user_status(http_client, bot):
         if soup.find(string="Online now") or (status_element and "Online" in status_element.get_text()):
             is_online = True
 
-        state_key = f"user_{target['name']}"
-        current_state = await load_state()
-        was_online = current_state.get(state_key, False)
+        state_key = f"user_status_{target['name']}"
+        # Fetch the last known state from MongoDB
+        was_online = await db.get_state(state_key)
+        
+        # If was_online is None (first run), assume False to prevent initial alert
+        # We save the current state immediately if it's the first run.
+        if was_online is None:
+            await db.set_state(state_key, is_online)
+            was_online = is_online
+
 
         if is_online and not was_online:
             # User just came online
             msg = f"🚨 **__USER ALERT__**\n\n👤 **__{target['name']}** is now **ONLINE__**! 🟢\n🔗 **__[Profile Link]({target['url']})__**"
             try:
                 await bot.send_message(NOTIFICATION_CHAT_ID, msg, disable_web_page_preview=True)
-                current_state[state_key] = True
-                await save_state(current_state)
+                await db.set_state(state_key, True)
             except Exception as e:
                 logger.error(f"Telegram Error: {e}")
         
@@ -89,8 +74,7 @@ async def check_user_status(http_client, bot):
             msg = f"💤 **__STATUS UPDATE__**\n\n👤 **__{target['name']}** is now **OFFLINE__** 🔴"
             try:
                 await bot.send_message(NOTIFICATION_CHAT_ID, msg, disable_web_page_preview=True)
-                current_state[state_key] = False
-                await save_state(current_state)
+                await db.set_state(state_key, False)
             except Exception as e:
                 logger.error(f"Telegram Error: {e}")
         
@@ -101,9 +85,8 @@ async def check_user_status(http_client, bot):
 async def check_forums(http_client, bot):
     """
     Checks for new threads in forums.
-    Returns a dictionary of forum names and their current thread counts.
+    Uses MongoDB to store the list of previously seen threads.
     """
-    state = await load_state()
     forum_counts = {}
     
     for forum_name, url in FORUM_TARGETS.items():
@@ -125,8 +108,15 @@ async def check_forums(http_client, bot):
         
         forum_counts[forum_name] = len(current_threads)
 
-        previous_threads = state.get(forum_name, [])
-        prev_urls = {t['url'] for t in previous_threads}
+        state_key = f"forum_threads_{forum_name}"
+        # Fetch the previous list of threads from MongoDB
+        previous_threads_list = await db.get_state(state_key)
+        
+        # If previous_threads_list is None (first run), initialize it to empty list
+        if previous_threads_list is None:
+            previous_threads_list = []
+            
+        prev_urls = {t['url'] for t in previous_threads_list}
         curr_urls = {t['url'] for t in current_threads}
 
         new_urls = curr_urls - prev_urls
@@ -144,7 +134,7 @@ async def check_forums(http_client, bot):
 
         # Process Removed Threads
         if removed_urls:
-            for item in previous_threads:
+            for item in previous_threads_list:
                 if item['url'] in removed_urls:
                     msg = f"🗑 **__THREAD REMOVED** \n– from {forum_name}__\n\n📝 __{item['title']}__"
                     try:
@@ -152,8 +142,7 @@ async def check_forums(http_client, bot):
                     except Exception as e:
                         logger.error(f"Telegram Error: {e}")
 
-        # Save new state
-        state[forum_name] = current_threads
-        await save_state(state)
+        # Save new state (list of current threads)
+        await db.set_state(state_key, current_threads)
 
     return forum_counts
