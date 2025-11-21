@@ -12,10 +12,6 @@ from MyselfNeon.track import check_user_status, check_forums
 # Import database object for user registration
 from MyselfNeon.db import db 
 
-# Import the modules containing bot commands (this ensures they are registered)
-from MyselfNeon import broadcast
-from MyselfNeon import checks # New import for the /check command
-
 # YOUR KEEP ALIVE URL HERE
 KEEP_ALIVE_URL = "https://website-monitor-v0q9.onrender.com/" 
 
@@ -26,13 +22,20 @@ logger = logging.getLogger(__name__)
 # Global flag to track if the initial ready message has been sent
 BOT_READY_MESSAGE_SENT = False
 
-# Initialize Pyrogram Client
+# --- Initialize Pyrogram Client ---
+# Define the client object first so imported modules can register handlers on it.
 bot = Client(
     "platinmods_bot",
     api_id=API_ID,
     api_hash=API_HASH,
     bot_token=BOT_TOKEN
 )
+
+# Import the modules containing bot commands (This step registers the handlers)
+from MyselfNeon import broadcast
+from MyselfNeon import checks
+# ----------------------------------------------------
+
 
 # --- Scheduler ---
 async def scheduler():
@@ -48,7 +51,6 @@ async def scheduler():
     if not BOT_READY_MESSAGE_SENT:
         try:
             msg = "✅ **__Bot Online & Monitoring:\n\nI have Successfully Reconnected to Telegram. The monitoring schedule has been initialized (Happens after every server Restart).__**"
-            # NOTE: If this fails with 401, the bot is misconfigured, but we should continue execution.
             await bot.send_message(NOTIFICATION_CHAT_ID, msg)
             logger.info("Sent 'Bot Ready' message after restart.")
             BOT_READY_MESSAGE_SENT = True
@@ -94,13 +96,12 @@ async def start_cmd(client, message):
     chat_type = message.chat.type.name.lower()
     
     if user and chat_type == 'private':
-        # --- USER REGISTRATION LOGIC (FIXED) ---
+        # --- USER REGISTRATION LOGIC ---
         user_id = user.id
-        # Safely get the user name, falling back to first_name if full_name causes an error
+        # Safely get the user name
         try:
-            user_name = user.full_name # Pyrogram 2.x standard way
+            user_name = user.full_name
         except AttributeError:
-            # Fallback for older Pyrogram versions or unusual Telegram user objects
             user_name = user.first_name if user.first_name else "Anonymous"
             logger.warning(f"User {user_id} lacks 'full_name', using '{user_name}' instead.")
         
@@ -131,6 +132,13 @@ if __name__ == "__main__":
     # 1. Start the Fake Web Server (for cloud binding)
     logger.info(f"Starting Web Server on port {PORT}")
     start_web_server(PORT)
+
+    # Log loaded command modules
+    logger.info("--- Loading Command Modules ---")
+    logger.info("Loaded MyselfNeon.broadcast (Commands: /broadcast, /users)")
+    logger.info("Loaded MyselfNeon.checks (Command: /check)")
+    logger.info("-------------------------------")
+
 
     # 2. Start the Bot
     logger.info("Starting Telegram Bot...")
