@@ -38,7 +38,7 @@ pip install -r requirements.txt
 
 ---
 
-## ⚙️ *Configuration (config.py)*
+## ⚙️ *Configuration*
 
 ```python
 API_ID = 123
