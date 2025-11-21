@@ -4,7 +4,7 @@
 
 ---
 
-## ✨ *Features*
+### ✨ *Features*
 
 - ***User Online/Offline tracking***  
 - ***New forum thread detection***  
@@ -16,7 +16,7 @@
 
 ---
 
-## 🧩 *How It Works*
+### 🧩 *How It Works*
 
 ***The bot continuously:***
 ***1. Fetches Platinmods URLs using async HTTP clients  
@@ -28,7 +28,7 @@
 
 ---
 
-## 🚀 *Installation*
+### 🚀 *Installation*
 
 ```bash
 git clone https://github.com/MyselfNeon/Platinmods
@@ -38,7 +38,7 @@ pip install -r requirements.txt
 
 ---
 
-## ⚙️ *Configuration*
+### ⚙️ *Configuration*
 
 ```python
 API_ID = 123
@@ -59,7 +59,7 @@ FORUM_TARGETS = {
 
 ---
 
-## ▶️ *Running the Bot*
+### ▶️ *Running the Bot*
 
 ```bash
 python main.py
@@ -67,14 +67,14 @@ python main.py
 
 ---
 
-## 🧪 *Commands*
+### 🧪 *Commands*
 
 **- `/start` *Shows your Chat ID***.  
 **- `/check` *manual check + summary.***
 
 ---
 
-## 🌐 *Deployment*
+### 🌐 *Deployment*
 
 ### *Render / Railway / Replit*
 
