@@ -138,7 +138,7 @@ async def check_forums(http_client, bot):
                 if item['url'] in new_urls:
                     msg = f"🚨 **__NEW THREAD** \n– in {forum_name}__\n\n📝 __{item['title']}\n🔗 **[View Thread]({item['url']})__**"
                     try:
-                        await bot.send_message(NOTIFICATION_CHAT_ID, msg)
+                        await bot.send_message(NOTIFICATION_CHAT_ID, msg, disable_web_page_preview=True)
                     except Exception as e:
                         logger.error(f"Telegram Error: {e}")
 
@@ -148,7 +148,7 @@ async def check_forums(http_client, bot):
                 if item['url'] in removed_urls:
                     msg = f"🗑 **__THREAD REMOVED** \n– from {forum_name}__\n\n📝 __{item['title']}__"
                     try:
-                        await bot.send_message(NOTIFICATION_CHAT_ID, msg)
+                        await bot.send_message(NOTIFICATION_CHAT_ID, msg, disable_web_page_preview=True)
                     except Exception as e:
                         logger.error(f"Telegram Error: {e}")
 
