@@ -22,7 +22,7 @@ AUTH_USERS = {int(x.strip()) for x in AUTH_USERS_STRING.split(',') if x.strip().
 # --- Database Config (MongoDB) ---
 # Your Mongodb Database Url
 DB_URI = os.getenv("DB_URI", "")
-DB_NAME = os.getenv("DB_NAME", "SaveRestricted")
+DB_NAME = os.getenv("DB_NAME", "PMT-Testing")
 
 # --- Application Config ---
 # The Chat ID where alerts will be sent. 
