@@ -7,11 +7,9 @@ from config import USER_TARGETS, FORUM_TARGETS, NOTIFICATION_CHAT_ID
 
 # Configure Logger for this module
 logger = logging.getLogger(__name__)
-
 STATE_FILE = 'platinmods_state.json'
 
 # --- Helper Functions (ASYNCHRONOUS File I/O) ---
-
 def _load_state_sync():
     """Synchronous function to load state (to be run in a thread)."""
     if os.path.exists(STATE_FILE):
@@ -52,7 +50,6 @@ async def get_soup(url, client):
         return None
 
 # --- Tracking Logic ---
-
 async def check_user_status(http_client, bot):
     """
     Checks user online status and sends alerts (online/offline).
@@ -79,7 +76,7 @@ async def check_user_status(http_client, bot):
 
         if is_online and not was_online:
             # User just came online
-            msg = f"🚨 **USER ALERT**\n\n👤 **{target['name']}** is now **ONLINE**! 🟢\n🔗 [Profile Link]({target['url']})"
+            msg = f"🚨 **__USER ALERT__**\n\n👤 **__{target['name']}** is now **ONLINE__**! 🟢\n🔗 **__[Profile Link]({target['url']})__**"
             try:
                 await bot.send_message(NOTIFICATION_CHAT_ID, msg, disable_web_page_preview=True)
                 current_state[state_key] = True
@@ -89,7 +86,7 @@ async def check_user_status(http_client, bot):
         
         elif not is_online and was_online:
             # User just went offline
-            msg = f"💤 **STATUS UPDATE**\n\n👤 **{target['name']}** is now **OFFLINE** 🔴"
+            msg = f"💤 **__STATUS UPDATE__**\n\n👤 **__{target['name']}** is now **OFFLINE__** 🔴"
             try:
                 await bot.send_message(NOTIFICATION_CHAT_ID, msg, disable_web_page_preview=True)
                 current_state[state_key] = False
@@ -139,7 +136,7 @@ async def check_forums(http_client, bot):
         if new_urls:
             for item in current_threads:
                 if item['url'] in new_urls:
-                    msg = f"✨ **NEW THREAD** in __{forum_name}__\n\n📝 **{item['title']}**\n🔗 [View Thread]({item['url']})"
+                    msg = f"🚨 **__NEW THREAD** \n– in {forum_name}__\n\n📝 __{item['title']}\n🔗 **[View Thread]({item['url']})__**"
                     try:
                         await bot.send_message(NOTIFICATION_CHAT_ID, msg)
                     except Exception as e:
@@ -149,7 +146,7 @@ async def check_forums(http_client, bot):
         if removed_urls:
             for item in previous_threads:
                 if item['url'] in removed_urls:
-                    msg = f"🗑 **THREAD REMOVED** from __{forum_name}__\n\n📝 **{item['title']}**"
+                    msg = f"🗑 **__THREAD REMOVED** \n– from {forum_name}__\n\n📝 __{item['title']}__"
                     try:
                         await bot.send_message(NOTIFICATION_CHAT_ID, msg)
                     except Exception as e:
