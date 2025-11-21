@@ -3,10 +3,13 @@ import logging
 import httpx
 import aiohttp 
 from pyrogram import Client, filters
+# Import necessary config variables for core functions
 from config import API_ID, API_HASH, BOT_TOKEN, NOTIFICATION_CHAT_ID, CHECK_INTERVAL, PORT
 from app import start_web_server
 
+# Import tracking logic for the scheduler
 from MyselfNeon.track import check_user_status, check_forums
+# Import database object for user registration
 from MyselfNeon.db import db 
 
 # Import the modules containing bot commands (this ensures they are registered)
@@ -45,6 +48,7 @@ async def scheduler():
     if not BOT_READY_MESSAGE_SENT:
         try:
             msg = "✅ **__Bot Online & Monitoring:\n\nI have Successfully Reconnected to Telegram. The monitoring schedule has been initialized (Happens after every server Restart).__**"
+            # NOTE: If this fails with 401, the bot is misconfigured, but we should continue execution.
             await bot.send_message(NOTIFICATION_CHAT_ID, msg)
             logger.info("Sent 'Bot Ready' message after restart.")
             BOT_READY_MESSAGE_SENT = True
@@ -90,15 +94,21 @@ async def start_cmd(client, message):
     chat_type = message.chat.type.name.lower()
     
     if user and chat_type == 'private':
-        # --- USER REGISTRATION LOGIC ---
+        # --- USER REGISTRATION LOGIC (FIXED) ---
         user_id = user.id
-        user_name = user.full_name
+        # Safely get the user name, falling back to first_name if full_name causes an error
+        try:
+            user_name = user.full_name # Pyrogram 2.x standard way
+        except AttributeError:
+            # Fallback for older Pyrogram versions or unusual Telegram user objects
+            user_name = user.first_name if user.first_name else "Anonymous"
+            logger.warning(f"User {user_id} lacks 'full_name', using '{user_name}' instead.")
         
         # Add user if they don't exist
         if not await db.is_user_exist(user_id):
             await db.add_user(user_id, user_name)
             logger.info(f"New user registered: {user_name} ({user_id})")
-        # -------------------------------
+        # ---------------------------------------
         
         reply_text = (
             f"👋 **__Bot is Online!__**\n\n"
