@@ -3,7 +3,8 @@ import logging
 import httpx
 import aiohttp 
 from pyrogram import Client, filters
-from config import *
+# Import ALL necessary config variables, including the new auth ones
+from config import API_ID, API_HASH, BOT_TOKEN, NOTIFICATION_CHAT_ID, CHECK_INTERVAL, PORT, OWNER_ID, AUTH_USERS
 from app import start_web_server
 
 # Import tracking logic from the new module
@@ -17,8 +18,29 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(level
 logger = logging.getLogger(__name__)
 
 # Global flag to track if the initial ready message has been sent
-# This flag is reset to False every time the Python process restarts (e.g., after server sleep/wake).
 BOT_READY_MESSAGE_SENT = False
+
+# --- Authorization Filter ---
+def auth_user_filter(_, client, message):
+    """Custom filter to check if the user is the owner or an authorized user."""
+    # Check if the message has a user (not a channel post or other non-user message)
+    if not message.from_user:
+        return False
+        
+    user_id = message.from_user.id
+    
+    # Check for Owner ID first, then Authorized Users set
+    is_authorized = user_id == OWNER_ID or user_id in AUTH_USERS
+    
+    if not is_authorized:
+        logger.warning(f"Unauthorized access attempt by user ID: {user_id}")
+        asyncio.create_task(message.reply("⛔ **__Access Denied__**\n__You are not authorized to use this command.__"))
+        
+    return is_authorized
+
+# Pyrogram filters must be callable, we assign the function to a variable
+authorized_users_only = filters.create(auth_user_filter)
+# ---------------------------
 
 # Initialize Pyrogram Client
 bot = Client(
@@ -80,6 +102,10 @@ async def keep_alive():
 # --- Bot Commands ---
 @bot.on_message(filters.command("start"))
 async def start_cmd(client, message):
+    """
+    Shows the user their chat ID. This command is NOT restricted 
+    as users need it to configure NOTIFICATION_CHAT_ID.
+    """
     chat_type = message.chat.type.name.lower()
     
     if chat_type == 'private':
@@ -99,8 +125,11 @@ async def start_cmd(client, message):
     
     await message.reply(reply_text)
 
-@bot.on_message(filters.command("check"))
+@bot.on_message(filters.command("check") & authorized_users_only)
 async def force_check(client, message):
+    """
+    Triggers an immediate check for authorized users.
+    """
     # Send the temporary message
     tmp = await message.reply(
         "🔄 **__Manual Check Initiated...__**\n**__Please wait for the summary Report.__**"
