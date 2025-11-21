@@ -1,4 +1,4 @@
-## *Platinmods Monitor Bot*
+## *Website Monitor Bot* 🌐
 
 ***A fully automated monitoring bot for Platinmods.com built using Pyrogram, httpx, aiohttp, Flask, and asynchronous scraping with BeautifulSoup.***
 
