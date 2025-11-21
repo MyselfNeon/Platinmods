@@ -37,10 +37,10 @@ async def scheduler():
     """Main loop. Waits for the Pyrogram client to be running before executing."""
     global BOT_READY_MESSAGE_SENT
     
-    # Wait until the bot client is fully started (ready to send messages)
-    while not bot.is_running:
+    # Wait until the bot client is fully started (Pyrogram 2.x uses .is_connected)
+    while not bot.is_connected:
         logger.info("Scheduler waiting for Telegram client to start...")
-        await asyncio.sleep(5) 
+        await asyncio.sleep(5)
 
     # *** Send ready message once per process startup/restart ***
     if not BOT_READY_MESSAGE_SENT:
