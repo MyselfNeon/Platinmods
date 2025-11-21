@@ -105,8 +105,8 @@ async def force_check(client, message):
     tmp = await message.reply(
         "🔄 **__Manual Check Initiated...__**\n**__Please wait for the summary Report.__**"
     )
-    # Wait 2 seconds, then delete it
-    await asyncio.sleep(2)
+    # Wait 1 seconds, then delete it
+    await asyncio.sleep(1)
     await tmp.delete()
 
     async def run_check_and_confirm(chat_id):
